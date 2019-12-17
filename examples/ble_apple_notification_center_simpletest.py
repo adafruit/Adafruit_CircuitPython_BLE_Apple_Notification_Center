@@ -1,9 +1,8 @@
 """
 This example solicits that apple devices that provide notifications connect to it, initiates
-pairing, prints existing notifications and then prints any new ones as they arrive.
+pairing, and prints existing notifications.
 """
 
-import time
 import adafruit_ble
 from adafruit_ble.advertising.standard import SolicitServicesAdvertisement
 import adafruit_ble_apple_notification_center as ancs
@@ -13,22 +12,25 @@ a = SolicitServicesAdvertisement()
 a.solicited_services.append(ancs.AppleNotificationCenterService)
 radio.start_advertising(a)
 
+print("Waiting for connection")
+
 while not radio.connected:
     pass
 
-print("connected")
+print("Connected")
 
-known_notifications = set()
+for connection in radio.connections:
+    if ancs.AppleNotificationCenterService not in connection:
+        continue
 
-while radio.connected:
-    for connection in radio.connections:
-        if not connection.paired:
-            connection.pair()
-            print("paired")
+    if not connection.paired:
+        connection.pair()
+        print("Paired")
 
-        ans = connection[ancs.AppleNotificationCenterService]
-        for notification in ans.wait_for_new_notifications():
-            print(notification)
-    time.sleep(1)
-
-print("disconnected")
+    ans = connection[ancs.AppleNotificationCenterService]
+    # Wait for the notifications to load.
+    while len(ans.active_notifications) == 0:
+        pass
+    for notification_id in ans.active_notifications:
+        notification = ans.active_notifications[notification_id]
+        print(notification.app_id, notification.title)

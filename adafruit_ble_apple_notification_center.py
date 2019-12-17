@@ -188,7 +188,8 @@ class Notification:
 class AppleNotificationCenterService(Service):
     """Notification service.
 
-    Documented by Apple here: https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html
+    Documented by Apple here:
+      https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html
 
     """
     uuid = VendorUUID("7905F431-B5CE-4E99-A40F-4B1E122D00D0")

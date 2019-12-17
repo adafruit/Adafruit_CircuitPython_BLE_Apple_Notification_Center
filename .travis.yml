@@ -39,7 +39,7 @@ deploy:
 install:
   - pip install -r requirements.txt
   - pip install circuitpython-build-tools Sphinx sphinx-rtd-theme
-  - pip install --force-reinstall pylint==1.9.2
+  - pip install --force-reinstall "pylint<3"
 
 script:
   - pylint adafruit_ble_apple_notification_center.py
