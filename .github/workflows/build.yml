@@ -33,7 +33,7 @@ jobs:
         sudo apt-get install -y gettext
         pip install -r requirements.txt
         pip install circuitpython-build-tools Sphinx sphinx-rtd-theme
-        pip install --force-reinstall pylint==1.9.2
+        pip install --force-reinstall "pylint<3"
     - name: Library version
       run: git describe --dirty --always --tags
     - name: PyLint
