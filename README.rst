@@ -8,9 +8,9 @@ Introduction
 .. image:: https://img.shields.io/discord/327254708534116352.svg
     :target: https://discord.gg/nBQh6qu
     :alt: Discord
-
-.. image:: https://travis-ci.com/adafruit/Adafruit_CircuitPython_BLE_Apple_Notification_Center.svg?branch=master
-    :target: https://travis-ci.com/adafruit/Adafruit_CircuitPython_BLE_Apple_Notification_Center
+    
+.. image:: https://github.com/adafruit/Adafruit_CircuitPython_BLE_Apple_Notification_Center/workflows/Build%20CI/badge.svg
+    :target: https://github.com/adafruit/Adafruit_CircuitPython_BLE_Apple_Notification_Center/actions
     :alt: Build Status
 
 BLE library for the Apple Notification Center
