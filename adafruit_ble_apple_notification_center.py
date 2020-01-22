@@ -37,7 +37,7 @@ BLE library for the Apple Notification Center
 import struct
 import time
 
-from adafruit_ble import Service
+from adafruit_ble.services import Service
 from adafruit_ble.uuid import VendorUUID
 from adafruit_ble.characteristics.stream import StreamIn, StreamOut
 
