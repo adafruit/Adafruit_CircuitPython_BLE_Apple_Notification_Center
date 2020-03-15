@@ -63,13 +63,16 @@ class _NotificationAttribute:
             pass
 
         _, _ = struct.unpack("<BI", notification.data_source.read(5))
-        attribute_id, attribute_length = struct.unpack("<BH", notification.data_source.read(3))
+        attribute_id, attribute_length = struct.unpack(
+            "<BH", notification.data_source.read(3)
+        )
         if attribute_id != self._id:
             raise RuntimeError("Data for other attribute")
         value = notification.data_source.read(attribute_length)
         value = value.decode("utf-8")
         notification._attribute_cache[self._id] = value
         return value
+
 
 NOTIFICATION_CATEGORIES = (
     "Other",
@@ -83,11 +86,13 @@ NOTIFICATION_CATEGORIES = (
     "HealthAndFitness",
     "BusinessAndFinance",
     "Location",
-    "Entertainment"
+    "Entertainment",
 )
+
 
 class Notification:
     """One notification that appears in the iOS notification center."""
+
     # pylint: disable=too-many-instance-attributes
 
     app_id = _NotificationAttribute(0)
@@ -113,14 +118,21 @@ class Notification:
     negative_action_label = _NotificationAttribute(7)
     """Human readable label of the negative action."""
 
-    def __init__(self, notification_id, event_flags, category_id, category_count, *, control_point,
-                 data_source):
-        self.id = notification_id # pylint: disable=invalid-name
+    def __init__(
+        self,
+        notification_id,
+        event_flags,
+        category_id,
+        category_count,
+        *,
+        control_point,
+        data_source
+    ):
+        self.id = notification_id  # pylint: disable=invalid-name
         """Integer id of the notification."""
 
         self.removed = False
         """True when the notification has been cleared on the iOS device."""
-
 
         self.silent = False
         self.important = False
@@ -178,12 +190,20 @@ class Notification:
             flags.append("positive_action")
         if self.negative_action:
             flags.append("negative_action")
-        return (category + " " +
-                " ".join(flags) + " " +
-                self.app_id + " " +
-                str(self.title) + " " +
-                str(self.subtitle) + " " +
-                str(self.message))
+        return (
+            category
+            + " "
+            + " ".join(flags)
+            + " "
+            + self.app_id
+            + " "
+            + str(self.title)
+            + " "
+            + str(self.subtitle)
+            + " "
+            + str(self.message)
+        )
+
 
 class AppleNotificationCenterService(Service):
     """Notification service.
@@ -192,13 +212,16 @@ class AppleNotificationCenterService(Service):
       https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html
 
     """
+
     uuid = VendorUUID("7905F431-B5CE-4E99-A40F-4B1E122D00D0")
 
     control_point = StreamIn(uuid=VendorUUID("69D1D8F3-45E1-49A8-9821-9BBDFDAAD9D9"))
-    data_source = StreamOut(uuid=VendorUUID("22EAC6E9-24D6-4BB5-BE44-B36ACE7C7BFB"),
-                            buffer_size=1024)
-    notification_source = StreamOut(uuid=VendorUUID("9FBF120D-6301-42D9-8C58-25E699A21DBD"),
-                                    buffer_size=8*100)
+    data_source = StreamOut(
+        uuid=VendorUUID("22EAC6E9-24D6-4BB5-BE44-B36ACE7C7BFB"), buffer_size=1024
+    )
+    notification_source = StreamOut(
+        uuid=VendorUUID("9FBF120D-6301-42D9-8C58-25E699A21DBD"), buffer_size=8 * 100
+    )
 
     def __init__(self, service=None):
         super().__init__(service=service)
@@ -206,18 +229,25 @@ class AppleNotificationCenterService(Service):
 
     def _update(self):
         # Pylint is incorrectly inferring the type of self.notification_source so disable no-member.
-        while self.notification_source.in_waiting > 7: # pylint: disable=no-member
-            buffer = self.notification_source.read(8) # pylint: disable=no-member
-            event_id, event_flags, category_id, category_count, nid = struct.unpack("<BBBBI",
-                                                                                    buffer)
+        while self.notification_source.in_waiting > 7:  # pylint: disable=no-member
+            buffer = self.notification_source.read(8)  # pylint: disable=no-member
+            event_id, event_flags, category_id, category_count, nid = struct.unpack(
+                "<BBBBI", buffer
+            )
             if event_id == 0:
-                self._active_notifications[nid] = Notification(nid, event_flags, category_id,
-                                                               category_count,
-                                                               control_point=self.control_point,
-                                                               data_source=self.data_source)
+                self._active_notifications[nid] = Notification(
+                    nid,
+                    event_flags,
+                    category_id,
+                    category_count,
+                    control_point=self.control_point,
+                    data_source=self.data_source,
+                )
                 yield self._active_notifications[nid]
             elif event_id == 1:
-                self._active_notifications[nid].update(event_flags, category_id, category_count)
+                self._active_notifications[nid].update(
+                    event_flags, category_id, category_count
+                )
                 yield None
             elif event_id == 2:
                 self._active_notifications[nid].removed = True
