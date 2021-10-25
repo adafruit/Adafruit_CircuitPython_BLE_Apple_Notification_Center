@@ -95,6 +95,11 @@ Usage Example
             notification = ans.active_notifications[notification_id]
             print(notification.app_id, notification.title)
 
+Documentation
+=============
+
+API documentation for this library can be found on `Read the Docs <https://circuitpython.readthedocs.io/projects/ble_apple_notification_center/en/latest/>`_.
+
 Contributing
 ============
 
