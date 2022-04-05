@@ -12,59 +12,73 @@ notifications and prints any new ones as they arrive.
 import time
 import board
 import digitalio
-
+import neopixel
 import adafruit_ble
 from adafruit_ble.advertising.standard import SolicitServicesAdvertisement
 import adafruit_ble_apple_notification_center as ancs
 
-butA = digitalio.DigitalInOut(board.D4)  # Circuit Playground Bluefruit A button
-butB = digitalio.DigitalInOut(board.D5)  # Circuit Playground Bluefruit A button
-butA.switch_to_input(digitalio.Pull.DOWN)  # buttons are active HIGH
+# Circuit Playground Bluefruit buttons and LED setup
+butA = digitalio.DigitalInOut(board.D4)  # CPB "A" button
+butB = digitalio.DigitalInOut(board.D5)  # CPB "B" button
+butA.switch_to_input(digitalio.Pull.DOWN) # buttons are active HIGH
 butB.switch_to_input(digitalio.Pull.DOWN)
 
+leds = neopixel.NeoPixel(board.D8, 10, brightness=0.1)
+
+(coff, cred, cgrn, cblu, cgra) = (0x000000, 0xff0000, 0x00ff00, 0x0000ff, 0x111111 )
+leds_off           = ( coff,coff,coff,coff,coff,  coff,coff,coff,coff,coff )
+leds_idle          = ( cgra,cgra,cgra,cgra,cgra,  cgra,cgra,cgra,cgra,cgra )
+leds_incoming_call = ( coff,cgrn,cgrn,cgrn,coff,  coff,cred,cred,cred,coff )
+leds_active_call   = ( cgrn,coff,coff,coff,cgrn,  cgrn,cred,cred,cred,cgrn )
+
+print("starting...")
 radio = adafruit_ble.BLERadio()  # pylint: disable=no-member
 a = SolicitServicesAdvertisement()
+#a.complete_name = "CIRPYCALLHANDLER" # this crashes things?
 a.solicited_services.append(ancs.AppleNotificationCenterService)
 radio.start_advertising(a)
 
-while not radio.connected:
-    pass
+last_display_time = time.monotonic()
 
-print("connected")
+while True:
+    while not radio.connected:
+        print("not connected")
+        time.sleep(1)
 
-while radio.connected:
     for connection in radio.connections:
         if not connection.paired:
             connection.pair()
             print("paired")
 
         ans = connection[ancs.AppleNotificationCenterService]
+
         for notification in ans.wait_for_new_notifications():
-            print("new notification:", notification)
+            print("New Notification:\n- ", notification)
 
-        print("Notifications:", len(ans.active_notifications))
-        for nid, n in ans.active_notifications.items():
-            print(
-                "uid:",
-                n.id,
-                "cat:",
-                n.category_id,
-                "title:",
-                n.title,
-                "msg:",
-                n.message,
-            )
-            if n.category_id == 1:  # incoming call, has positive & negative actions
+        leds[:] = leds_idle
+
+        for notification in ans.active_notifications.values():
+            # incoming call category, has positive & negative actions
+            if notification.category_id == 1:
+                leds[:] = leds_incoming_call
                 if butA.value:
-                    print("accepting call")
-                    n.send_positive_action()
+                    print("Action: accepting call")
+                    notification.send_positive_action()
+                    time.sleep(1) # simple debounce
                 if butB.value:
-                    print("declining call")
-                    n.send_negative_action()
-            if n.category_id == 12:  # active call, only has negative action
+                    print("Action: declining call")
+                    notification.send_negative_action()
+                    time.sleep(1) # simple debounce
+            # active call category, only has negative action
+            if notification.category_id == 12:
+                leds[:] = leds_active_call
                 if butB.value:
-                    print("hanging up call")
-                    n.send_negative_action()
-    time.sleep(1)
+                    print("Action: hanging up call")
+                    notification.send_negative_action()
+                    time.sleep(1) # simple debounce
 
-print("disconnected")
+        if time.monotonic() - last_display_time > 3.0:
+            last_display_time = time.monotonic()
+            print("Current Notifications:", len(ans.active_notifications), time.monotonic())
+            for nid, n in ans.active_notifications.items():
+                print("- uid:",n.id, "catid:", n.category_id, "title:", n.title, "msg:", n.message)
