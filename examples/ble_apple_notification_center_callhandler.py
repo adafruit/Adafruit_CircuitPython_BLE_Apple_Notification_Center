@@ -20,21 +20,21 @@ import adafruit_ble_apple_notification_center as ancs
 # Circuit Playground Bluefruit buttons and LED setup
 butA = digitalio.DigitalInOut(board.D4)  # CPB "A" button
 butB = digitalio.DigitalInOut(board.D5)  # CPB "B" button
-butA.switch_to_input(digitalio.Pull.DOWN) # buttons are active HIGH
+butA.switch_to_input(digitalio.Pull.DOWN)  # buttons are active HIGH
 butB.switch_to_input(digitalio.Pull.DOWN)
 
 leds = neopixel.NeoPixel(board.D8, 10, brightness=0.1)
 
-(coff, cred, cgrn, cblu, cgra) = (0x000000, 0xff0000, 0x00ff00, 0x0000ff, 0x111111 )
-leds_off           = ( coff,coff,coff,coff,coff,  coff,coff,coff,coff,coff )
-leds_idle          = ( cgra,cgra,cgra,cgra,cgra,  cgra,cgra,cgra,cgra,cgra )
-leds_incoming_call = ( coff,cgrn,cgrn,cgrn,coff,  coff,cred,cred,cred,coff )
-leds_active_call   = ( cgrn,coff,coff,coff,cgrn,  cgrn,cred,cred,cred,cgrn )
+(coff, cred, cgrn, cblu, cgra) = (0x000000, 0xFF0000, 0x00FF00, 0x0000FF, 0x111111)
+leds_off = (coff, coff, coff, coff, coff, coff, coff, coff, coff, coff)
+leds_idle = (cgra, cgra, cgra, cgra, cgra, cgra, cgra, cgra, cgra, cgra)
+leds_incoming_call = (coff, cgrn, cgrn, cgrn, coff, coff, cred, cred, cred, coff)
+leds_active_call = (cgrn, coff, coff, coff, cgrn, cgrn, cred, cred, cred, cgrn)
 
 print("starting...")
 radio = adafruit_ble.BLERadio()  # pylint: disable=no-member
 a = SolicitServicesAdvertisement()
-#a.complete_name = "CIRPYCALLHANDLER" # this crashes things?
+# a.complete_name = "CIRPYCALLHANDLER" # this crashes things?
 a.solicited_services.append(ancs.AppleNotificationCenterService)
 radio.start_advertising(a)
 
@@ -64,21 +64,34 @@ while True:
                 if butA.value:
                     print("Action: accepting call")
                     notification.send_positive_action()
-                    time.sleep(1) # simple debounce
+                    time.sleep(1)  # simple debounce
                 if butB.value:
                     print("Action: declining call")
                     notification.send_negative_action()
-                    time.sleep(1) # simple debounce
+                    time.sleep(1)  # simple debounce
             # active call category, only has negative action
             if notification.category_id == 12:
                 leds[:] = leds_active_call
                 if butB.value:
                     print("Action: hanging up call")
                     notification.send_negative_action()
-                    time.sleep(1) # simple debounce
+                    time.sleep(1)  # simple debounce
 
         if time.monotonic() - last_display_time > 3.0:
             last_display_time = time.monotonic()
-            print("Current Notifications:", len(ans.active_notifications), time.monotonic())
+            print(
+                "Current Notifications:",
+                len(ans.active_notifications),
+                time.monotonic(),
+            )
             for nid, n in ans.active_notifications.items():
-                print("- uid:",n.id, "catid:", n.category_id, "title:", n.title, "msg:", n.message)
+                print(
+                    "- uid:",
+                    n.id,
+                    "catid:",
+                    n.category_id,
+                    "title:",
+                    n.title,
+                    "msg:",
+                    n.message,
+                )

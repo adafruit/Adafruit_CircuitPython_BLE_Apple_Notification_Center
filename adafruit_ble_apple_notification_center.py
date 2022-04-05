@@ -143,18 +143,18 @@ class Notification:
 
     def send_positive_action(self):
         """Sends positive action on this notification. For example, to accept an IncomingCall."""
-        cmd = 2       # ANCS_CMD_PERFORM_NOTIFICATION_ACTION,
+        cmd = 2  # ANCS_CMD_PERFORM_NOTIFICATION_ACTION,
         uid = self.id
-        action_id = 0 # ANCS_ACTION_POSITIVE
-        buffer = struct.pack( "<BIB", cmd, uid, action_id )
+        action_id = 0  # ANCS_ACTION_POSITIVE
+        buffer = struct.pack("<BIB", cmd, uid, action_id)
         self.control_point.write(buffer)
 
     def send_negative_action(self):
         """Sends negative action on this notification. For example, to decline an IncomingCall."""
-        cmd = 2       # ANCS_CMD_PERFORM_NOTIFICATION_ACTION,
+        cmd = 2  # ANCS_CMD_PERFORM_NOTIFICATION_ACTION,
         uid = self.id
-        action_id = 1 # ANCS_ACTION_NEGATIVE
-        buffer = struct.pack( "<BIB", cmd, uid, action_id )
+        action_id = 1  # ANCS_ACTION_NEGATIVE
+        buffer = struct.pack("<BIB", cmd, uid, action_id)
         self.control_point.write(buffer)
 
     def update(self, event_flags, category_id, category_count):
