@@ -24,7 +24,7 @@ from adafruit_ble.services import Service
 from adafruit_ble.uuid import VendorUUID
 from adafruit_ble.characteristics.stream import StreamIn, StreamOut
 
-__version__ = "0.0.0-auto.0"
+__version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BLE_Apple_Notification_Center.git"
 
 
