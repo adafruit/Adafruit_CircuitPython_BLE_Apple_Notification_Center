@@ -2,8 +2,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-from __future__ import annotations
-
 """
 `adafruit_ble_apple_notification_center`
 ================================================================================
@@ -19,11 +17,13 @@ BLE library for the Apple Notification Center
 * Adafruit's BLE library: https://github.com/adafruit/Adafruit_CircuitPython_BLE
 """
 
+from __future__ import annotations
+
 import struct
 import time
 
 try:
-    from typing import Generator, Union, Dict
+    from typing import Generator, Union, Dict, Optional, Any
 except ImportError:
     pass
 
@@ -36,11 +36,11 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BLE_Apple_Notific
 
 
 class _NotificationAttribute:
-    def __init__(self, attribute_id: int, *, max_length: bool=False) -> None:
+    def __init__(self, attribute_id: int, *, max_length: bool = False) -> None:
         self._id = attribute_id
         self._max_length = max_length
 
-    def __get__(self, notification: Notification, cls) -> int:
+    def __get__(self, notification: Notification, cls: Any) -> str:
         if self._id in notification._attribute_cache:
             return notification._attribute_cache[self._id]
 
@@ -117,7 +117,7 @@ class Notification:
         category_count: int,
         *,
         control_point: StreamIn,
-        data_source: StreamOut
+        data_source: StreamOut,
     ) -> None:
         self.id = notification_id  # pylint: disable=invalid-name
         """Integer id of the notification."""
@@ -143,7 +143,7 @@ class Notification:
 
         self.update(event_flags, category_id, category_count)
 
-        self._attribute_cache: Dict[int] = {}
+        self._attribute_cache: Dict[int, str] = {}
 
         self.control_point = control_point
         self.data_source = data_source
@@ -230,11 +230,11 @@ class AppleNotificationCenterService(Service):
         uuid=VendorUUID("9FBF120D-6301-42D9-8C58-25E699A21DBD"), buffer_size=8 * 100
     )
 
-    def __init__(self, service: Service=None) -> None:
+    def __init__(self, service: Service = None) -> None:
         super().__init__(service=service)
-        self._active_notifications = {}
+        self._active_notifications: Dict[tuple, Notification] = {}
 
-    def _update(self) -> Generator[Union[int, None], None, None]:
+    def _update(self) -> Generator[Union[Notification, None], None, None]:
         # Pylint is incorrectly inferring the type of self.notification_source so disable no-member.
         while self.notification_source.in_waiting > 7:  # pylint: disable=no-member
             buffer = self.notification_source.read(8)  # pylint: disable=no-member
@@ -261,7 +261,9 @@ class AppleNotificationCenterService(Service):
                 del self._active_notifications[nid]
                 yield None
 
-    def wait_for_new_notifications(self, timeout: float=None) -> Generator[Union[int, None], None, None]:
+    def wait_for_new_notifications(
+        self, timeout: Optional[float] = None
+    ) -> Generator[Union[Notification, None], None, None]:
         """Waits for new notifications and yields them. Returns on timeout, update, disconnect or
         clear."""
         start_time = time.monotonic()
