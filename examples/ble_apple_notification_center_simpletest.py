@@ -8,10 +8,10 @@ pairing, and prints existing notifications.
 
 import adafruit_ble
 from adafruit_ble.advertising.standard import SolicitServicesAdvertisement
+
 import adafruit_ble_apple_notification_center as ancs
 
-# PyLint can't find BLERadio for some reason so special case it here.
-radio = adafruit_ble.BLERadio()  # pylint: disable=no-member
+radio = adafruit_ble.BLERadio()
 a = SolicitServicesAdvertisement()
 a.solicited_services.append(ancs.AppleNotificationCenterService)
 radio.start_advertising(a)

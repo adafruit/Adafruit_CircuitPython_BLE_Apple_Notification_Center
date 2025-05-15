@@ -10,11 +10,13 @@ notifications and prints any new ones as they arrive.
 """
 
 import time
+
+import adafruit_ble
 import board
 import digitalio
 import neopixel
-import adafruit_ble
 from adafruit_ble.advertising.standard import SolicitServicesAdvertisement
+
 import adafruit_ble_apple_notification_center as ancs
 
 # Circuit Playground Bluefruit buttons and LED setup
@@ -32,7 +34,7 @@ leds_incoming_call = (coff, cgrn, cgrn, cgrn, coff, coff, cred, cred, cred, coff
 leds_active_call = (cgrn, coff, coff, coff, cgrn, cgrn, cred, cred, cred, cgrn)
 
 print("starting...")
-radio = adafruit_ble.BLERadio()  # pylint: disable=no-member
+radio = adafruit_ble.BLERadio()
 a = SolicitServicesAdvertisement()
 # a.complete_name = "CIRPYCALLHANDLER" # this crashes things?
 a.solicited_services.append(ancs.AppleNotificationCenterService)
