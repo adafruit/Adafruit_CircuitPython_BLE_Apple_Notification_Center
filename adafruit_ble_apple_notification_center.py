@@ -23,13 +23,13 @@ import struct
 import time
 
 try:
-    from typing import Generator, Union, Dict, Optional, Any
+    from typing import Any, Dict, Generator, Optional, Union
 except ImportError:
     pass
 
+from adafruit_ble.characteristics.stream import StreamIn, StreamOut
 from adafruit_ble.services import Service
 from adafruit_ble.uuid import VendorUUID
-from adafruit_ble.characteristics.stream import StreamIn, StreamOut
 
 __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BLE_Apple_Notification_Center.git"
@@ -53,9 +53,7 @@ class _NotificationAttribute:
             pass
 
         _, _ = struct.unpack("<BI", notification.data_source.read(5))
-        attribute_id, attribute_length = struct.unpack(
-            "<BH", notification.data_source.read(3)
-        )
+        attribute_id, attribute_length = struct.unpack("<BH", notification.data_source.read(3))
         if attribute_id != self._id:
             raise RuntimeError("Data for other attribute")
         value = notification.data_source.read(attribute_length)
@@ -83,8 +81,6 @@ NOTIFICATION_CATEGORIES = (
 
 class Notification:
     """One notification that appears in the iOS notification center."""
-
-    # pylint: disable=too-many-instance-attributes
 
     app_id = _NotificationAttribute(0)
     """String id of the app that generated the notification. It is not the name of the app. For
@@ -119,7 +115,7 @@ class Notification:
         control_point: StreamIn,
         data_source: StreamOut,
     ) -> None:
-        self.id = notification_id  # pylint: disable=invalid-name
+        self.id = notification_id
         """Integer id of the notification."""
 
         self.removed = False
@@ -179,7 +175,6 @@ class Notification:
         self._attribute_cache = {}
 
     def __str__(self) -> str:
-        # pylint: disable=too-many-branches
         flags = []
         category = None
         if self.category_id < len(NOTIFICATION_CATEGORIES):
@@ -236,8 +231,8 @@ class AppleNotificationCenterService(Service):
 
     def _update(self) -> Generator[Union[Notification, None], None, None]:
         # Pylint is incorrectly inferring the type of self.notification_source so disable no-member.
-        while self.notification_source.in_waiting > 7:  # pylint: disable=no-member
-            buffer = self.notification_source.read(8)  # pylint: disable=no-member
+        while self.notification_source.in_waiting > 7:
+            buffer = self.notification_source.read(8)
             event_id, event_flags, category_id, category_count, nid = struct.unpack(
                 "<BBBBI", buffer
             )
@@ -252,9 +247,7 @@ class AppleNotificationCenterService(Service):
                 )
                 yield self._active_notifications[nid]
             elif event_id == 1:
-                self._active_notifications[nid].update(
-                    event_flags, category_id, category_count
-                )
+                self._active_notifications[nid].update(event_flags, category_id, category_count)
                 yield None
             elif event_id == 2:
                 self._active_notifications[nid].removed = True
